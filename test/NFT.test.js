@@ -13,7 +13,7 @@ contract('NFT', ([deployer, artist, owner1, owner2]) => {
         nft = await NFT.new(
             "Famous Paintings",
             "PAINT",
-            "ipfs://some_link_here/",
+            "ipfs://QmfA7ou6PCd6SukJCmtJHDjHVVHT5p8YXysnJcpsfCjEuo/",
             royalityFee, // 25%
             artist // Artist
         )

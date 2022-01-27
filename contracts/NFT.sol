@@ -104,25 +104,25 @@ contract NFT is ERC721Enumerable, Ownable {
         _transfer(from, to, tokenId);
     }
 
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public payable override {
-        if (msg.value > 0) {
-            uint256 royality = (msg.value * royalityFee) / 100;
-            _payRoyality(royality);
+    // function safeTransferFrom(
+    //     address from,
+    //     address to,
+    //     uint256 tokenId
+    // ) public payable override {
+    //     if (msg.value > 0) {
+    //         uint256 royality = (msg.value * royalityFee) / 100;
+    //         _payRoyality(royality);
 
-            (bool success2, ) = payable(from).call{value: msg.value - royality}(
-                ""
-            );
-            require(success2);
+    //         (bool success2, ) = payable(from).call{value: msg.value - royality}(
+    //             ""
+    //         );
+    //         require(success2);
 
-            emit Sale(from, to, msg.value);
-        }
+    //         emit Sale(from, to, msg.value);
+    //     }
 
-        safeTransferFrom(from, to, tokenId, "");
-    }
+    //     safeTransferFrom(from, to, tokenId, "");
+    // }
 
     function safeTransferFrom(
         address from,
