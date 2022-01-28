@@ -16,7 +16,10 @@ contract NFT is ERC721Enumerable, Ownable {
     string public baseExtension = ".json";
 
     address public artist;
-    uint256 public royalityFee;
+    uint256 public royaltyFeeArtist = 25;
+    uint256 public royaltyFeeMinter = 25;
+    address[20] public minters;
+    uint256 public tokenId_ = 1;
 
     event Sale(address from, address to, uint256 value);
 
@@ -24,11 +27,11 @@ contract NFT is ERC721Enumerable, Ownable {
         string memory _name,
         string memory _symbol,
         string memory _initBaseURI,
-        uint256 _royalityFee,
+        // uint256 _royaltyFeeArtist = 25;
         address _artist
     ) ERC721(_name, _symbol) {
         setBaseURI(_initBaseURI);
-        royalityFee = _royalityFee;
+        // royaltyFeeArtist = _royaltyFeeArtist;
         artist = _artist;
     }
 
@@ -40,18 +43,20 @@ contract NFT is ERC721Enumerable, Ownable {
         if (msg.sender != owner()) {
             require(msg.value >= cost);
 
-            // Pay royality to artist, and remaining to deployer of contract
+            // Pay royalty to artist, and remaining to deployer of contract
 
-            uint256 royality = (msg.value * royalityFee) / 100;
-            _payRoyality(royality);
+            uint256 royaltyArtist = (msg.value * royaltyFeeArtist) / 100;
+            _payRoyaltyArtist(royaltyArtist);
 
-            (bool success2, ) = payable(owner()).call{
-                value: (msg.value - royality)
+            (bool success3, ) = payable(owner()).call{
+                value: (msg.value - royaltyArtist)
             }("");
-            require(success2);
+            require(success3);
         }
 
         _safeMint(msg.sender, supply + 1);
+        minters[tokenId_] = msg.sender; 
+        tokenId_ ++;
     }
 
     function tokenURI(uint256 tokenId)
@@ -90,13 +95,16 @@ contract NFT is ERC721Enumerable, Ownable {
         );
 
         if (msg.value > 0) {
-            uint256 royality = (msg.value * royalityFee) / 100;
-            _payRoyality(royality);
+            uint256 royaltyArtist = (msg.value * royaltyFeeArtist) / 100;
+            _payRoyaltyArtist(royaltyArtist);
 
-            (bool success2, ) = payable(from).call{value: msg.value - royality}(
+            uint256 royaltyMinter = (msg.value * royaltyFeeMinter) / 100;
+            _payRoyaltyMinter(royaltyMinter, tokenId);
+
+            (bool success3, ) = payable(from).call{value: msg.value - royaltyArtist - royaltyMinter}(
                 ""
             );
-            require(success2);
+            require(success3);
 
             emit Sale(from, to, msg.value);
         }
@@ -104,25 +112,6 @@ contract NFT is ERC721Enumerable, Ownable {
         _transfer(from, to, tokenId);
     }
 
-    // function safeTransferFrom(
-    //     address from,
-    //     address to,
-    //     uint256 tokenId
-    // ) public payable override {
-    //     if (msg.value > 0) {
-    //         uint256 royality = (msg.value * royalityFee) / 100;
-    //         _payRoyality(royality);
-
-    //         (bool success2, ) = payable(from).call{value: msg.value - royality}(
-    //             ""
-    //         );
-    //         require(success2);
-
-    //         emit Sale(from, to, msg.value);
-    //     }
-
-    //     safeTransferFrom(from, to, tokenId, "");
-    // }
 
     function safeTransferFrom(
         address from,
@@ -136,13 +125,16 @@ contract NFT is ERC721Enumerable, Ownable {
         );
 
         if (msg.value > 0) {
-            uint256 royality = (msg.value * royalityFee) / 100;
-            _payRoyality(royality);
+            uint256 royaltyArtist = (msg.value * royaltyFeeArtist) / 100;
+            _payRoyaltyArtist(royaltyArtist);
 
-            (bool success2, ) = payable(from).call{value: msg.value - royality}(
+             uint256 royaltyMinter = (msg.value * royaltyFeeMinter) / 100;
+            _payRoyaltyMinter(royaltyMinter, tokenId);
+
+            (bool success3, ) = payable(from).call{value: msg.value - royaltyArtist - royaltyMinter}(
                 ""
             );
-            require(success2);
+            require(success3);
 
             emit Sale(from, to, msg.value);
         }
@@ -155,9 +147,14 @@ contract NFT is ERC721Enumerable, Ownable {
         return baseURI;
     }
 
-    function _payRoyality(uint256 _royalityFee) internal {
-        (bool success1, ) = payable(artist).call{value: _royalityFee}("");
+    function _payRoyaltyArtist(uint256 _royaltyFeeArtist) internal {
+        (bool success1, ) = payable(artist).call{value: _royaltyFeeArtist}("");
         require(success1);
+    }
+
+    function _payRoyaltyMinter(uint256 _royaltyFeeMinter, uint256 _tokenId) internal {
+        (bool success2, ) = payable(minters[_tokenId]).call{value: _royaltyFeeMinter}("");
+        require(success2);
     }
 
     // Owner functions
@@ -165,7 +162,7 @@ contract NFT is ERC721Enumerable, Ownable {
         baseURI = _newBaseURI;
     }
 
-    function setRoyalityFee(uint256 _royalityFee) public onlyOwner {
-        royalityFee = _royalityFee;
-    }
+    // function setRoyaltyFeeArtist(uint256 _royaltyFeeArtist) public onlyOwner {
+    //     royaltyFeeArtist = _royaltyFeeArtist;
+    // }    
 }

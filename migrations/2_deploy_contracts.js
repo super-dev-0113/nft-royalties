@@ -10,7 +10,7 @@ module.exports = async function (deployer) {
         "Famous Paintings",
         "PAINT",
         IPFS_IMAGE_METADATA_URI,
-        25, // 25%
+        // 25, // 25%
         accounts[1] // Artist
     )
 };
